@@ -47,7 +47,6 @@ st.markdown("""
 AVAILABLE_MODELS = [
     "meta-llama/llama-4-scout-17b-16e-instruct","llama-3.1-8b-instant",
  "qwen/qwen3-32b",
- 
  "openai/gpt-oss-120b"
 ]
 
@@ -241,7 +240,7 @@ def get_groq_response(user_input, conversation_history):
             temperature=0.7,
             max_tokens=1024,
             top_p=1,
-            stream=True
+            stream=False
         )
         
         # Debug: Show raw response
