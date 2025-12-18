@@ -45,10 +45,10 @@ st.markdown("""
 
 # Available models from Groq
 AVAILABLE_MODELS = [
-    "llama3-8b-8192",
-    "llama3-70b-8192",
-    "mixtral-8x7b-32768",
-    "gemma-7b-it"
+    "meta-llama/llama-4-scout-17b-16e-instruct","llama-3.1-8b-instant",
+ "qwen/qwen3-32b",
+ 
+ "openai/gpt-oss-120b"
 ]
 
 # Personality configurations with strict boundaries
@@ -192,7 +192,7 @@ if "messages" not in st.session_state:
 if "current_personality" not in st.session_state:
     st.session_state.current_personality = "Math Teacher"
 if "current_model" not in st.session_state:
-    st.session_state.current_model = "llama3-8b-8192"
+    st.session_state.current_model = AVAILABLE_MODELS[0]
 
 
 def get_conversation_key():
@@ -217,16 +217,22 @@ def initialize_conversation():
     return st.session_state.messages[conversation_key]
 
 def get_groq_response(user_input, conversation_history):
-    """Get response from Groq API"""
+    """Get response from Groq API with better error handling"""
     try:
-        # Prepare messages for API
-        api_messages = [
-            {"role": msg["role"], "content": msg["content"]}
-            for msg in conversation_history
-        ]
+        # Prepare messages for API (excluding timestamp)
+        api_messages = []
+        for msg in conversation_history:
+            # Only include role and content for API
+            api_messages.append({
+                "role": msg["role"],
+                "content": msg["content"]
+            })
         
         # Add user's new message
         api_messages.append({"role": "user", "content": user_input})
+        
+        # Debug: Show what's being sent to API
+        print(f"Sending to API: {api_messages[-2:]}")  # Last 2 messages
         
         # Call Groq API
         response = client.chat.completions.create(
@@ -238,10 +244,16 @@ def get_groq_response(user_input, conversation_history):
             stream=False
         )
         
-        # Get the assistant's response
-        assistant_response = response.choices[0].message.content
+        # Debug: Show raw response
+        print(f"Raw response: {response}")
         
-        # Update conversation history
+        # Get the assistant's response
+        if hasattr(response.choices[0].message, 'content'):
+            assistant_response = response.choices[0].message.content
+        else:
+            assistant_response = str(response.choices[0].message)
+        
+        # Update conversation history with timestamps
         conversation_history.append({
             "role": "user",
             "content": user_input,
@@ -257,7 +269,9 @@ def get_groq_response(user_input, conversation_history):
         return assistant_response
         
     except Exception as e:
-        return f"Error: {str(e)}"
+        st.error(f"API Error: {str(e)}")
+        print(f"Error details: {str(e)}")
+        return f"Sorry, I encountered an error: {str(e)}. Please check your API key and try again."
 
 def main():
     # Header
