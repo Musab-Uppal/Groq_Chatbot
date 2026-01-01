@@ -1,7 +1,7 @@
 import os
 from typing import List, Dict
 from mem0 import MemoryClient
-
+import uuid
 
 class MemoryManager:
     def __init__(self, user_id: str = "default"):

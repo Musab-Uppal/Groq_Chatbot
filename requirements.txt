@@ -2,3 +2,5 @@ streamlit>=1.28.0
 groq==0.37.1
 python-dotenv>=1.0.0
 mem0ai>=0.2.0
+uuid>=1.30.0
+streamlit-cookies-manager>=0.2.0

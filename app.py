@@ -3,7 +3,8 @@ import os
 from groq import Groq
 from dotenv import load_dotenv
 from memory_manager import MemoryManager
-
+from streamlit_cookies_manager import EncryptedCookieManager
+import uuid
 # Load environment
 load_dotenv()
 
@@ -16,10 +17,19 @@ st.set_page_config(
     page_icon="🧠",
     layout="wide"
 )
-
-# Initialize session state
+cookies = EncryptedCookieManager(
+    prefix="ai_chatbot",
+    password=os.getenv("COOKIE_SECRET", "dev-secret")
+)
+if not cookies.ready():
+    st.stop()
+# Get or create user_id
+if "user_id" not in cookies:
+    cookies["user_id"] = str(uuid.uuid4())
+    cookies.save()
+user_id = cookies["user_id"]
 if "user_id" not in st.session_state:
-    st.session_state.user_id = "user_001"
+    st.session_state.user_id = user_id
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
@@ -34,15 +44,7 @@ st.title("🤖 Smart Chatbot with Memory")
 with st.sidebar:
     st.header("Settings")
 
-    # User management
-    new_user_id = st.text_input("User ID", st.session_state.user_id)
-    if new_user_id != st.session_state.user_id:
-        st.session_state.user_id = new_user_id
-        st.session_state.memory_manager = MemoryManager(new_user_id)
-        st.session_state.chat_history = []
-        st.rerun()
-
-    st.divider()
+   
 
     if st.button("Clear Memory & Chat History"):
         st.session_state.memory_manager.delete_user_memories()
@@ -125,3 +127,5 @@ if prompt := st.chat_input("What would you like to chat about?"):
 
             except Exception as e:
                 st.error(f"Error: {e}")
+
+    
