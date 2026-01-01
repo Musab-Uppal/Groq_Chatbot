@@ -44,18 +44,14 @@ with st.sidebar:
 
     st.divider()
 
-    if st.button("Clear Chat History"):
+    if st.button("Clear Memory & Chat History"):
+        st.session_state.memory_manager.delete_user_memories()
         st.session_state.chat_history = []
         st.rerun()
 
     model = "llama-3.3-70b-versatile"
 
     st.divider()
-
-    if st.button("Show saved memory"):
-        memories = st.session_state.memory_manager.get_relevant_memories("")
-        st.write(memories)
-
 # Display chat history
 for message in st.session_state.chat_history:
     with st.chat_message(message["role"]):

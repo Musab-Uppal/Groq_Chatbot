@@ -63,3 +63,11 @@ class MemoryManager:
             user_id=self.user_id,
             metadata={"type": "fact"}
         )
+    def delete_user_memories(self):
+        """Delete all memories for the user"""
+        try:
+            self.client.delete_all(
+                user_id=self.user_id
+            )
+        except Exception as e:
+            print(f"Warning: Failed to delete memories: {e}")
