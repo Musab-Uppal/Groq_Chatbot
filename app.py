@@ -43,8 +43,12 @@ st.title("🤖 Smart Chatbot with Memory")
 # Sidebar
 with st.sidebar:
     st.header("Settings")
+    personality = st.selectbox(
+        "Chatbot Personality",
+        ["General", "Traveler", "Chef", "Psychologist"]
+    )
 
-   
+    st.divider()
 
     if st.button("Clear Memory & Chat History"):
         st.session_state.memory_manager.delete_user_memories()
@@ -76,16 +80,46 @@ if prompt := st.chat_input("What would you like to chat about?"):
         )
 
     # STEP 2: Build context with memories
-    system_prompt = """
-    You are a helpful assistant.
-    Use the user's saved factual memory when relevant.
-    If memory is provided, treat it as true.
-    """
+       # STEP 2: Build context with memories and personality
+
+    personality_prompts = {
+        "General": """
+You are a helpful general-purpose assistant.
+Answer any question normally.
+""",
+        "Traveler": """
+You are a travel expert.
+Only answer questions related to travel, destinations, culture, visas, food, safety, or itineraries.
+If the user's question is NOT about travel, say:
+"❌ This question is outside my travel expertise."
+""",
+        "Chef": """
+You are a professional chef.
+Only answer questions related to cooking, recipes, ingredients, food techniques, or cuisine.
+If the user's question is NOT about food or cooking, say:
+"❌ This question is outside my cooking expertise."
+""",
+        "Psychologist": """
+You are a psychologist.
+Only answer questions related to mental health, emotions, behavior, relationships, or self-improvement.
+Do NOT give medical diagnoses.
+If the user's question is NOT psychological in nature, say:
+"❌ This question is outside my psychology expertise."
+"""
+    }
+
+    system_prompt = personality_prompts.get(personality, personality_prompts["General"])
+
+    system_prompt += """
+Use the user's saved factual memory when relevant.
+If memory is provided, treat it as true.
+"""
 
     if relevant_memories:
         system_prompt += "\nKnown facts about the user:\n"
         for m in relevant_memories:
             system_prompt += f"- {m}\n"
+
 
     # STEP 3: Prepare messages for Groq
     messages = [
