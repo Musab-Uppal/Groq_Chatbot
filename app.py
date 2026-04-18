@@ -23,26 +23,44 @@ cookies = EncryptedCookieManager(
 )
 if not cookies.ready():
     st.stop()
-# Get or create user_id
+# Get or create user_id and user_name
 if "user_id" not in cookies:
     cookies["user_id"] = str(uuid.uuid4())
     cookies.save()
+if "user_name" not in cookies:
+    cookies["user_name"] = ""
+    cookies.save()
 user_id = cookies["user_id"]
+user_name = cookies["user_name"]
 if "user_id" not in st.session_state:
     st.session_state.user_id = user_id
+if "user_name" not in st.session_state:
+    st.session_state.user_name = user_name
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-if "memory_manager" not in st.session_state:
-    st.session_state.memory_manager = MemoryManager(st.session_state.user_id)
+# Determine effective user_id for memory
+effective_user_id = st.session_state.user_name if st.session_state.user_name else st.session_state.user_id
+
+if "memory_manager" not in st.session_state or st.session_state.get("memory_user_id", "") != effective_user_id:
+    st.session_state.memory_manager = MemoryManager(effective_user_id)
+    st.session_state.memory_user_id = effective_user_id
 
 # UI Header
 st.title("🤖 Smart Chatbot with Memory")
 
 # Sidebar
 with st.sidebar:
-    st.header("Settings")
+    st.header("User Settings")
+    user_name_input = st.text_input("Your Name (for personalized memory)", value=st.session_state.user_name, key="user_name_input")
+    if user_name_input != st.session_state.user_name:
+        cookies["user_name"] = user_name_input
+        cookies.save()
+        st.session_state.user_name = user_name_input
+        st.rerun()
+    
+    st.header("Chat Settings")
     personality = st.selectbox(
         "Chatbot Personality",
         ["General", "Traveler", "Chef", "Psychologist"]
